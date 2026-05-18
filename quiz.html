@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>成為他人的北極星 — 課前 QA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --night-deep:#060B1C;
+    --night:#0E1834;
+    --night-light:#1A2B4F;
+    --night-mid:#243B6E;
+    --star-gold:#E8B647;
+    --star-bright:#FFE8A8;
+    --star-glow:#FFD668;
+    --text-cream:#F2EAD3;
+    --text-soft:#A8B0CC;
+    --text-dim:#6E7A98;
+    --border-faint:rgba(232,182,71,.22);
+    --border-soft:rgba(232,182,71,.45);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{min-height:100vh}
+  body{
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+    color:var(--text-cream);
+    background:var(--night-deep);
+    background-image:
+      radial-gradient(ellipse 900px 700px at 75% 18%, rgba(46, 70, 130, 0.55), transparent 62%),
+      radial-gradient(ellipse 700px 500px at 18% 85%, rgba(28, 45, 92, 0.6), transparent 65%),
+      radial-gradient(ellipse 500px 400px at 50% 50%, rgba(36, 55, 100, 0.3), transparent 70%),
+      linear-gradient(180deg, #060B1C 0%, #0E1834 45%, #060B1C 100%);
+    background-attachment:fixed;
+    overflow-x:hidden;
+    position:relative;
+  }
+
+  /* starfield: tiny dots scattered using multiple radial-gradients */
+  body::before{
+    content:"";
+    position:fixed;inset:0;
+    pointer-events:none;
+    z-index:1;
+    background-image:
+      radial-gradient(1px 1px at 12% 8%, #fff, transparent),
+      radial-gradient(1px 1px at 78% 12%, rgba(255,255,255,.85), transparent),
+      radial-gradient(1px 1px at 45% 25%, #fff, transparent),
+      radial-gradient(1px 1px at 90% 38%, rgba(255,255,255,.7), transparent),
+      radial-gradient(1px 1px at 22% 42%, #fff, transparent),
+      radial-gradient(1px 1px at 65% 50%, rgba(255,255,255,.6), transparent),
+      radial-gradient(1px 1px at 8% 65%, #fff, transparent),
+      radial-gradient(1px 1px at 88% 70%, rgba(255,255,255,.85), transparent),
+      radial-gradient(1px 1px at 35% 78%, #fff, transparent),
+      radial-gradient(1px 1px at 72% 88%, rgba(255,255,255,.7), transparent),
+      radial-gradient(1.5px 1.5px at 18% 22%, rgba(255,232,168,.9), transparent),
+      radial-gradient(1.5px 1.5px at 55% 35%, rgba(255,232,168,.7), transparent),
+      radial-gradient(1.5px 1.5px at 82% 58%, rgba(255,232,168,.85), transparent),
+      radial-gradient(1.5px 1.5px at 28% 88%, rgba(255,232,168,.8), transparent),
+      radial-gradient(2px 2px at 92% 22%, rgba(255,255,255,.95), transparent),
+      radial-gradient(2px 2px at 38% 55%, rgba(255,232,168,.95), transparent),
+      radial-gradient(2px 2px at 60% 78%, rgba(255,255,255,.9), transparent);
+    background-size: 100% 100%;
+  }
+  /* second sparse layer with twinkling */
+  body::after{
+    content:"";
+    position:fixed;inset:0;
+    pointer-events:none;
+    z-index:1;
+    background-image:
+      radial-gradient(1.5px 1.5px at 30% 15%, rgba(255,232,168,1), transparent),
+      radial-gradient(2px 2px at 70% 30%, rgba(255,255,255,1), transparent),
+      radial-gradient(1.5px 1.5px at 15% 55%, rgba(255,232,168,.9), transparent),
+      radial-gradient(2px 2px at 85% 75%, rgba(255,232,168,1), transparent),
+      radial-gradient(1.5px 1.5px at 50% 90%, rgba(255,255,255,1), transparent);
+    animation:twinkle 4.5s ease-in-out infinite;
+  }
+  @keyframes twinkle{
+    0%,100%{opacity:.45}
+    50%{opacity:1}
+  }
+
+  .filters{position:absolute;width:0;height:0;overflow:hidden}
+
+  /* Top-right cluster */
+  .topbar{
+    position:fixed;
+    top:1.1rem;right:1.2rem;
+    z-index:50;
+    display:flex;align-items:center;gap:.65rem;
+  }
+  .pill{
+    background:rgba(14, 24, 52, 0.7);
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    border:1px solid var(--border-soft);
+    box-shadow:0 4px 18px rgba(0,0,0,.4), inset 0 0 0 1px rgba(255,232,168,.08);
+    color:var(--text-cream);
+    border-radius:999px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .clock{
+    font-family:"Inter",sans-serif;
+    font-weight:400;
+    font-size:1.2rem;
+    letter-spacing:.06em;
+    padding:.5rem 1.05rem .48rem;
+    font-feature-settings:"tnum";
+    color:var(--star-bright);
+  }
+  .audio-btn{
+    width:2.55rem;height:2.55rem;
+    cursor:pointer;
+    transition:transform .2s,box-shadow .2s,background .25s,border-color .25s;
+    position:relative;
+    padding:0;
+  }
+  .audio-btn:hover{transform:translateY(-1px);background:rgba(36, 55, 100, 0.85);border-color:var(--star-gold)}
+  .audio-btn:active{transform:translateY(1px)}
+  .audio-btn svg{width:1.1rem;height:1.1rem;color:var(--star-bright);transition:opacity .25s}
+  .audio-btn.playing{
+    background:linear-gradient(135deg,var(--star-gold),var(--star-glow));
+    border-color:var(--star-bright);
+    box-shadow:0 0 18px rgba(232,182,71,.5),0 4px 18px rgba(0,0,0,.4);
+  }
+  .audio-btn.playing svg{color:var(--night-deep)}
+  .audio-btn .ic-pause{display:none}
+  .audio-btn.playing .ic-play{display:none}
+  .audio-btn.playing .ic-pause{display:block}
+
+  .audio-btn .eq{
+    position:absolute;
+    inset:0;
+    display:none;
+    align-items:flex-end;justify-content:center;gap:2px;
+    padding-bottom:.55rem;
+    pointer-events:none;
+  }
+  .audio-btn.playing .eq{display:flex}
+  .audio-btn.playing .ic-pause{opacity:0}
+  .audio-btn .eq span{
+    width:3px;background:var(--night-deep);border-radius:1px;
+    animation:eq 1.1s ease-in-out infinite;
+  }
+  .audio-btn .eq span:nth-child(1){animation-delay:0s}
+  .audio-btn .eq span:nth-child(2){animation-delay:.15s}
+  .audio-btn .eq span:nth-child(3){animation-delay:.3s}
+  .audio-btn .eq span:nth-child(4){animation-delay:.45s}
+  @keyframes eq{
+    0%,100%{height:18%}
+    50%{height:65%}
+  }
+
+  .audio-btn.attention{animation:attention 1.8s ease-in-out 4}
+  @keyframes attention{
+    0%,100%{box-shadow:0 4px 18px rgba(0,0,0,.4),0 0 0 0 rgba(232,182,71,.6)}
+    50%{box-shadow:0 4px 18px rgba(0,0,0,.4),0 0 0 14px rgba(232,182,71,0); transform:scale(1.06)}
+  }
+
+  /* main stage */
+  main{
+    position:relative;z-index:2;
+    min-height:100vh;
+    display:flex;align-items:center;justify-content:center;
+    padding:6rem 1.5rem 4rem;
+  }
+  .stage{width:100%;max-width:720px;position:relative}
+
+  .page{
+    display:none;
+    animation:rise .9s cubic-bezier(.2,.7,.2,1) both;
+  }
+  .page.active{display:block}
+  @keyframes rise{
+    from{opacity:0;transform:translateY(20px)}
+    to{opacity:1;transform:translateY(0)}
+  }
+
+  /* North star */
+  .north-star{
+    width:88px;height:88px;
+    margin:0 auto 1.5rem;
+    position:relative;
+    animation:starFloat 6s ease-in-out infinite;
+  }
+  @keyframes starFloat{
+    0%,100%{transform:translateY(0)}
+    50%{transform:translateY(-6px)}
+  }
+  .north-star svg{
+    width:100%;height:100%;
+    filter:drop-shadow(0 0 18px rgba(255,214,104,.6)) drop-shadow(0 0 32px rgba(232,182,71,.3));
+  }
+  .north-star .ring{
+    position:absolute;inset:-12px;
+    border:1px dashed rgba(232,182,71,.3);
+    border-radius:50%;
+    animation:spin 30s linear infinite;
+  }
+  @keyframes spin{
+    to{transform:rotate(360deg)}
+  }
+
+  /* progress dots */
+  .progress{
+    display:flex;gap:.6rem;justify-content:center;
+    margin-bottom:1.75rem;
+  }
+  .progress span{
+    width:.55rem;height:.55rem;border-radius:50%;
+    background:rgba(168,176,204,.2);
+    border:1px solid rgba(168,176,204,.3);
+    transition:all .5s ease;
+  }
+  .progress span.done{
+    background:var(--star-gold);
+    border-color:var(--star-bright);
+    box-shadow:0 0 6px rgba(232,182,71,.5);
+  }
+  .progress span.current{
+    background:var(--star-bright);
+    border-color:var(--star-bright);
+    transform:scale(1.6);
+    box-shadow:0 0 12px rgba(255,232,168,.7);
+  }
+
+  /* Intro */
+  .intro-eyebrow{
+    font-family:"Inter","Noto Sans TC",sans-serif;
+    font-weight:300;
+    text-align:center;
+    color:var(--star-gold);
+    font-size:.85rem;
+    letter-spacing:.45em;
+    text-transform:uppercase;
+    margin-bottom:1.3rem;
+    opacity:.85;
+  }
+  h1.title{
+    font-weight:700;
+    text-align:center;
+    font-size:clamp(2.4rem,6vw,3.6rem);
+    line-height:1.25;
+    letter-spacing:.14em;
+    color:var(--text-cream);
+    margin-bottom:1rem;
+    text-shadow:0 0 24px rgba(232,182,71,.2);
+  }
+  .subtitle-en{
+    font-family:"Cormorant Garamond",serif;
+    font-style:italic;
+    font-weight:400;
+    text-align:center;
+    color:var(--star-bright);
+    font-size:1.1rem;
+    letter-spacing:.08em;
+    margin-bottom:.6rem;
+    opacity:.9;
+  }
+  .subtitle{
+    text-align:center;
+    font-size:1rem;
+    line-height:2;
+    color:var(--text-soft);
+    max-width:520px;
+    margin:0 auto 1.6rem;
+    font-weight:400;
+    letter-spacing:.05em;
+  }
+  .divider{
+    width:60px;height:1px;
+    background:linear-gradient(90deg, transparent, var(--star-gold), transparent);
+    margin:1.5rem auto;
+  }
+  .audio-hint-wrap{text-align:center;margin-bottom:2.4rem}
+  .audio-hint{
+    display:inline-flex;align-items:center;gap:.45rem;
+    font-size:.88rem;
+    color:var(--star-bright);
+    font-weight:400;
+    background:rgba(232,182,71,.08);
+    padding:.45rem 1.1rem;
+    border-radius:999px;
+    border:1px dashed rgba(232,182,71,.35);
+    letter-spacing:.05em;
+  }
+  .audio-hint .arrow-up{
+    display:inline-block;
+    animation:nudge 1.6s ease-in-out infinite;
+  }
+  @keyframes nudge{
+    0%,100%{transform:translateY(0)}
+    50%{transform:translateY(-3px)}
+  }
+  .name-field{max-width:420px;margin:0 auto 2rem;position:relative}
+  .name-field label{
+    display:block;
+    font-size:.85rem;
+    color:var(--text-soft);
+    margin-bottom:.55rem;
+    letter-spacing:.18em;
+    font-weight:400;
+    text-align:left;
+  }
+  .name-field label::before{content:"※ ";color:var(--star-gold)}
+  .name-input{
+    width:100%;
+    background:transparent;
+    border:none;
+    border-bottom:1.5px solid rgba(168,176,204,.4);
+    padding:.7rem .25rem;
+    font-family:inherit;
+    font-size:1.25rem;
+    font-weight:400;
+    color:var(--text-cream);
+    outline:none;
+    transition:border-color .3s;
+  }
+  .name-input:focus{border-bottom-color:var(--star-gold)}
+  .name-input::placeholder{color:rgba(168,176,204,.4);font-size:1rem}
+
+  /* Button */
+  .btn{
+    display:inline-flex;align-items:center;gap:.6rem;
+    font-family:inherit;
+    font-weight:500;
+    font-size:1rem;
+    letter-spacing:.22em;
+    color:var(--night-deep);
+    background:linear-gradient(135deg, var(--star-gold), var(--star-glow));
+    border:none;
+    padding:.9rem 2.4rem;
+    cursor:pointer;
+    border-radius:999px;
+    transition:transform .25s ease,box-shadow .25s ease;
+    box-shadow:0 4px 22px rgba(232,182,71,.35), 0 0 0 1px rgba(255,232,168,.5) inset;
+    position:relative;
+  }
+  .btn:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(232,182,71,.55), 0 0 0 1px rgba(255,232,168,.7) inset}
+  .btn:active{transform:translateY(1px)}
+  .btn:disabled{
+    opacity:.35;cursor:not-allowed;transform:none;
+    box-shadow:0 4px 12px rgba(0,0,0,.3);
+    background:rgba(168,176,204,.2);
+    color:var(--text-soft);
+  }
+  .btn-wrap{text-align:center;margin-top:1rem}
+  .btn .arrow{display:inline-block;transition:transform .3s ease}
+  .btn:hover .arrow{transform:translateX(4px)}
+
+  .btn-ghost{
+    background:transparent;
+    color:var(--star-bright);
+    border:1px solid var(--border-soft);
+    box-shadow:none;
+  }
+  .btn-ghost:hover{
+    background:rgba(232,182,71,.1);
+    border-color:var(--star-gold);
+    box-shadow:0 0 18px rgba(232,182,71,.25);
+  }
+
+  /* Question */
+  .qhead{
+    display:flex;align-items:center;justify-content:center;
+    gap:.85rem;flex-wrap:wrap;
+    margin-bottom:.6rem;
+  }
+  .qno{
+    font-family:"Cormorant Garamond",serif;
+    font-style:italic;
+    font-weight:500;
+    font-size:3rem;
+    color:var(--star-gold);
+    line-height:1;
+    letter-spacing:.02em;
+    text-shadow:0 0 18px rgba(232,182,71,.4);
+  }
+  .qno small{
+    font-size:.95rem;color:var(--text-dim);letter-spacing:.18em;font-weight:400;
+    margin-left:.4rem;
+    font-style:normal;
+    font-family:"Inter",sans-serif;
+  }
+  .multi-badge{
+    display:inline-flex;align-items:center;gap:.35rem;
+    background:rgba(232,182,71,.15);
+    color:var(--star-bright);
+    border:1px solid var(--border-soft);
+    padding:.3rem .8rem;
+    border-radius:999px;
+    font-size:.75rem;
+    letter-spacing:.2em;
+    font-weight:500;
+  }
+  .qtext{
+    font-size:1.15rem;
+    line-height:1.9;
+    text-align:center;
+    color:var(--text-cream);
+    margin:0 auto 2.2rem;
+    max-width:580px;
+    font-weight:400;
+    letter-spacing:.02em;
+  }
+  .options{display:flex;flex-direction:column;gap:.7rem;max-width:600px;margin:0 auto}
+  .opt{
+    display:flex;align-items:flex-start;gap:1rem;
+    padding:1rem 1.25rem;
+    background:rgba(20, 35, 64, 0.45);
+    border:1px solid var(--border-faint);
+    border-radius:8px;
+    cursor:pointer;
+    text-align:left;
+    font-family:inherit;
+    font-size:.98rem;
+    font-weight:400;
+    line-height:1.7;
+    color:var(--text-cream);
+    transition:all .25s ease;
+    backdrop-filter:blur(4px);
+  }
+  .opt:hover{
+    background:rgba(36, 55, 100, 0.55);
+    border-color:var(--star-gold);
+    transform:translateX(4px);
+    box-shadow:0 0 18px rgba(232,182,71,.12);
+  }
+  .opt.selected{
+    background:linear-gradient(135deg, rgba(232,182,71,.18), rgba(255,232,168,.08));
+    border-color:var(--star-bright);
+    box-shadow:0 0 24px rgba(232,182,71,.25), 0 4px 18px rgba(0,0,0,.3);
+    transform:translateX(0);
+  }
+  .opt-letter{
+    flex-shrink:0;
+    width:2.1rem;height:2.1rem;
+    border-radius:50%;
+    background:rgba(14, 24, 52, 0.6);
+    border:1px solid var(--border-soft);
+    display:flex;align-items:center;justify-content:center;
+    font-family:"Cormorant Garamond",serif;
+    font-style:italic;
+    font-weight:500;
+    font-size:1.05rem;
+    color:var(--star-gold);
+    transition:all .25s;
+  }
+  .opt.selected .opt-letter{
+    background:linear-gradient(135deg, var(--star-gold), var(--star-glow));
+    color:var(--night-deep);
+    border-color:var(--star-bright);
+    box-shadow:0 0 12px rgba(232,182,71,.5);
+  }
+  .opt-text{flex:1;padding-top:.15rem}
+  .opt-text b{
+    color:var(--star-bright);
+    font-weight:500;
+  }
+
+  /* End page */
+  .end-text{
+    font-size:1.02rem;
+    line-height:2.1;
+    color:var(--text-cream);
+    text-align:center;
+    max-width:560px;
+    margin:0 auto 1.4rem;
+    font-weight:400;
+    letter-spacing:.02em;
+  }
+  .end-text p{margin-bottom:1.2rem}
+  .end-text p:last-child{margin-bottom:0}
+  .end-text em{
+    color:var(--star-bright);
+    font-style:normal;
+    font-weight:500;
+  }
+
+  .check-card{
+    max-width:480px;margin:1.8rem auto 1.4rem;
+    padding:1.6rem 1.5rem;
+    background:rgba(20, 35, 64, 0.5);
+    border:1px solid var(--border-soft);
+    border-radius:10px;
+    text-align:center;
+    backdrop-filter:blur(4px);
+  }
+  .check-row{
+    display:flex;align-items:center;justify-content:center;gap:.85rem;
+    cursor:pointer;font-size:1.05rem;font-weight:500;
+    user-select:none;margin-bottom:.9rem;
+    color:var(--text-cream);
+  }
+  .check-box{
+    width:1.4rem;height:1.4rem;
+    border:1.5px solid var(--star-gold);
+    border-radius:4px;
+    background:transparent;
+    position:relative;transition:all .2s;flex-shrink:0;
+  }
+  .check-row input{display:none}
+  .check-row input:checked + .check-box{
+    background:linear-gradient(135deg,var(--star-gold),var(--star-glow));
+    border-color:var(--star-bright);
+    box-shadow:0 0 12px rgba(232,182,71,.4);
+  }
+  .check-row input:checked + .check-box::after{
+    content:"✓";
+    position:absolute;inset:0;
+    display:flex;align-items:center;justify-content:center;
+    color:var(--night-deep);font-weight:700;font-size:.95rem;
+  }
+  .event-info{
+    font-size:.92rem;
+    color:var(--text-soft);
+    line-height:1.85;
+    letter-spacing:.05em;
+    font-weight:400;
+  }
+  .event-info b{color:var(--star-bright);font-weight:500}
+
+  /* Thank you */
+  .thanks{text-align:center}
+  .thanks-mark{
+    font-size:3rem;
+    color:var(--star-gold);
+    line-height:1;
+    margin-bottom:1rem;
+    filter:drop-shadow(0 0 18px rgba(232,182,71,.6));
+    animation:starFloat 5s ease-in-out infinite;
+  }
+  .thanks h2{
+    font-size:1.7rem;font-weight:500;
+    margin-bottom:1.2rem;letter-spacing:.2em;
+    color:var(--text-cream);
+  }
+  .thanks p{
+    font-size:1rem;line-height:1.95;
+    color:var(--text-soft);
+    max-width:440px;margin:0 auto;
+    font-weight:400;
+  }
+  .thanks-time{
+    margin-top:2rem;
+    font-family:"Cormorant Garamond",serif;
+    font-style:italic;
+    font-size:1.1rem;
+    color:var(--star-gold);
+    letter-spacing:.15em;
+    font-weight:400;
+  }
+
+  .err{color:#FF8B7A;font-size:.92rem;text-align:center;margin-top:.8rem;min-height:1.4rem}
+
+  @media(max-width:560px){
+    main{padding:5rem 1rem 3rem}
+    .topbar{top:.8rem;right:.8rem;gap:.45rem}
+    .clock{font-size:1.02rem;padding:.4rem .8rem}
+    .audio-btn{width:2.25rem;height:2.25rem}
+    .audio-btn svg{width:1rem;height:1rem}
+    .north-star{width:72px;height:72px}
+    h1.title{font-size:2rem;letter-spacing:.08em}
+    .qno{font-size:2.4rem}
+    .qtext{font-size:1rem}
+    .opt{padding:.85rem 1rem;font-size:.94rem;gap:.7rem}
+    .opt-letter{width:1.85rem;height:1.85rem;font-size:.95rem}
+    .btn{padding:.8rem 1.8rem;font-size:.94rem}
+    .audio-hint{font-size:.82rem;padding:.4rem .85rem}
+    .subtitle{font-size:.92rem}
+  }
+</style>
+</head>
+<body>
+
+<svg class="filters" aria-hidden="true">
+  <defs>
+    <filter id="goldglow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+</svg>
+
+<div class="topbar">
+  <div class="pill clock" id="clock">--:--</div>
+  <button class="pill audio-btn attention" id="audio-btn" aria-label="開啟/關閉背景音樂" title="背景音樂">
+    <svg class="ic-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M9 18V5l12-2v13"/>
+      <circle cx="6" cy="18" r="3"/>
+      <circle cx="18" cy="16" r="3"/>
+    </svg>
+    <svg class="ic-pause" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <rect x="6" y="5" width="4" height="14" rx="1"/>
+      <rect x="14" y="5" width="4" height="14" rx="1"/>
+    </svg>
+    <div class="eq"><span></span><span></span><span></span><span></span></div>
+  </button>
+</div>
+
+<audio id="bgm" loop preload="auto">
+  <source src="bgm.mp3" type="audio/mpeg">
+</audio>
+
+<main>
+  <div class="stage">
+
+    <!-- Intro -->
+    <section class="page active" id="page-intro">
+      <div class="north-star">
+        <div class="ring"></div>
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="starGrad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#FFF5D8"/>
+              <stop offset="40%" stop-color="#FFD668"/>
+              <stop offset="100%" stop-color="#E8B647"/>
+            </radialGradient>
+          </defs>
+          <g filter="url(#goldglow)">
+            <!-- 8-point star -->
+            <path d="M50 8 L54 42 L88 50 L54 58 L50 92 L46 58 L12 50 L46 42 Z" fill="url(#starGrad)"/>
+            <path d="M50 22 L52 48 L78 50 L52 52 L50 78 L48 52 L22 50 L48 48 Z" fill="#FFF5D8" opacity="0.85" transform="rotate(45 50 50)"/>
+            <circle cx="50" cy="50" r="3" fill="#FFFFFF"/>
+          </g>
+        </svg>
+      </div>
+      <div class="intro-eyebrow">Inner Cultivation · Week 13</div>
+      <h1 class="title">成為他人的北極星</h1>
+      <div class="subtitle-en">Be the North Star</div>
+      <p class="subtitle">領袖會與世界和平<br>從一束光，灑下影響的種子</p>
+      <div class="divider"></div>
+      <div class="audio-hint-wrap">
+        <span class="audio-hint">
+          <span class="arrow-up">↗</span> 右上角的音符可以開啟背景音樂
+        </span>
+      </div>
+      <div class="name-field">
+        <label for="name">姓名 (必填)</label>
+        <input class="name-input" id="name" type="text" placeholder="請寫下你的名字…" autocomplete="off" />
+      </div>
+      <div class="btn-wrap">
+        <button class="btn" id="btn-start">進入課前 QA <span class="arrow">→</span></button>
+      </div>
+      <div class="err" id="err-name"></div>
+    </section>
+
+    <div id="questions"></div>
+
+    <!-- End -->
+    <section class="page" id="page-end">
+      <div class="progress" id="progress-end"></div>
+      <div class="end-text">
+        <p>本週社課是<em>這學期的最後一堂</em>，<br>不知道大家有沒有收穫呢？</p>
+        <p>如果還不清楚自己成長的軌跡，<br>很歡迎在這週課後留下來跟講師聊聊喔！</p>
+        <p>謝謝大家這學期的努力，<br>來到社課、籌辦社課。</p>
+        <p>歡迎大家在期末地獄當中，<br>給自己一個喘息的空間，<br>讓心回到天堂。</p>
+        <p><em>帶著滿滿的能量迎接期末！</em></p>
+      </div>
+      <div class="check-card">
+        <label class="check-row">
+          <input type="checkbox" id="attend" />
+          <span class="check-box"></span>
+          <span>我會來參加本週四社課</span>
+        </label>
+        <div class="event-info">
+          <b>5 / 21 (四)</b> · 19:00 – 21:30<br>
+          活動中心 429A
+        </div>
+      </div>
+      <div class="btn-wrap">
+        <button class="btn" id="btn-submit">送出回應 <span class="arrow">↗</span></button>
+      </div>
+      <div class="err" id="err-submit"></div>
+    </section>
+
+    <!-- Thanks -->
+    <section class="page" id="page-thanks">
+      <div class="thanks">
+        <div class="thanks-mark">✦</div>
+        <h2>已收到</h2>
+        <p>願這一束光，<br>能成為照亮他人的起點。</p>
+        <div class="thanks-time" id="final-time">用時 00:00</div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<!-- Firebase -->
+<script>
+  window.__fbReady = new Promise(resolve => { window.__fbResolve = resolve; });
+</script>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, collection, addDoc, serverTimestamp }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  // ====== Firebase 設定 (fortune-d9977) ======
+  const firebaseConfig = {
+    apiKey: "AIzaSyBVYmES8XBfB_dWyvD5Q-PrjnUhWGTc1SI",
+    authDomain: "fortune-d9977.firebaseapp.com",
+    projectId: "fortune-d9977",
+    storageBucket: "fortune-d9977.firebasestorage.app",
+    messagingSenderId: "489177144988",
+    appId: "1:489177144988:web:4068bbfd0da5801a209759",
+    measurementId: "G-7QTJMQSFT5"
+  };
+  // ============================================
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+  window.__fb = { db, collection, addDoc, serverTimestamp };
+  window.__fbResolve(window.__fb);
+</script>
+
+<script>
+/* ========== 題目資料 ========== */
+const COLLECTION = "responses_w13";   // 本週使用獨立 collection，跟上週分開
+
+const QUESTIONS = [
+  { q:"你覺得「世界和平」是有可能實現的嗎？", multi:false,
+    o:["<b>盡己所能</b>：雖然深知這件事很困難，我依然願意去做能幫助世界和平的小任務",
+       "<b>抱持希望</b>：嚮往和平，但深知現實中非常困難，改變像是把石頭丟入海中，只能起一些波瀾",
+       "<b>務實悲觀</b>：不太相信，覺得那是遙不可及的理想口號",
+       "<b>尚未深思</b>：距離生活太遠，目前還沒特別想過這個問題"]},
+  { q:"你相信有死後的世界嗎？例如天堂、地獄、輪迴。", multi:false,
+    o:["<b>相信</b>：覺得生命會以某種形式延續",
+       "<b>半信半疑</b>：抱持保留態度，但傾向寧可信其有",
+       "<b>不相信</b>：認為死亡就是一切的終點，活在當下就好",
+       "<b>尚未深思</b>：距離生活太遠，目前還沒特別想過這個問題"]},
+  { q:"你曾經「不求回報」地幫助過別人嗎？事後的感受是？", multi:false,
+    o:["<b>能量滿滿</b>：內心感到很充實，體會到純粹付出的快樂",
+       "<b>一半一半</b>：看對象與狀況，有時候會覺得自己的心力被過度消耗了",
+       "<b>渴望回報</b>：雖然不求實質回報，但內心深處還是希望被對方認可或感謝",
+       "<b>務實至上</b>：比較少有這種經驗，認為先顧好自己比較切合實際"]},
+  { q:"回顧你的人生，哪一種「苦」最讓你有感？", multi:true,
+    o:["<b>求不得</b>：理想與現實的落差（如：目標未達成、想要的得不到、對未來的焦慮）",
+       "<b>愛別離</b>：與生命中重要的人分開（如：失戀、告別、親友離散或漸行漸遠）",
+       "<b>怨憎會</b>：必須面對不喜歡的人事物（如：人際摩擦、避開不了的環境壓力）",
+       "<b>生老病死</b>：身體或生命本質帶來的無常（如：受傷生病、寵物親人或朋友的離世）"]},
+  { q:"是否曾有一位啟發你內心、讓你由衷想效法的「精神導師」或「典範人物」？", multi:false,
+    o:["<b>深受啟發</b>：有，這位導師（或偉人）的思想與事蹟，對我的價值觀與生命方向影響深遠",
+       "<b>滿心期待</b>：目前沒有特定的對象，但內心滿渴望能找到一位值得學習的精神指標",
+       "<b>理性存疑</b>：不太相信這類被推崇的「大師」或「偉人」，覺得很多人只是表面包裝得很完美，私下可能仍會做些虛偽或不堪的事",
+       "<b>獨立探索</b>：覺得不需要，我相信每個人就是自己的導師，習慣透過自我摸索與覺察來引導自己成長"]}
+];
+
+const TOTAL = QUESTIONS.length;
+// 單選題答案為 string ("A"/"B"/...)，複選題為 array (["A","C"])
+const answers = QUESTIONS.map(q => q.multi ? [] : null);
+let userName = "";
+let startTime = null;
+let endTime = null;
+
+/* ========== 右上角時鐘 ========== */
+const clockEl = document.getElementById("clock");
+function updateClock(){
+  const d = new Date();
+  clockEl.textContent =
+    String(d.getHours()).padStart(2,"0") + ":" +
+    String(d.getMinutes()).padStart(2,"0");
+}
+updateClock();
+setInterval(updateClock, 15000);
+
+/* ========== 背景音樂 ========== */
+const bgm = document.getElementById("bgm");
+const audioBtn = document.getElementById("audio-btn");
+bgm.volume = 0.5;
+
+audioBtn.addEventListener("click", async () => {
+  audioBtn.classList.remove("attention");
+  try{
+    if(bgm.paused){
+      await bgm.play();
+      audioBtn.classList.add("playing");
+    } else {
+      bgm.pause();
+      audioBtn.classList.remove("playing");
+    }
+  } catch(e){
+    console.warn("audio play failed:", e);
+  }
+});
+bgm.addEventListener("play",  () => audioBtn.classList.add("playing"));
+bgm.addEventListener("pause", () => audioBtn.classList.remove("playing"));
+bgm.addEventListener("ended", () => audioBtn.classList.remove("playing"));
+
+/* ========== 建立題目頁 ========== */
+const qContainer = document.getElementById("questions");
+QUESTIONS.forEach((q, i) => {
+  const sec = document.createElement("section");
+  sec.className = "page";
+  sec.id = `page-q${i}`;
+  sec.innerHTML = `
+    <div class="progress"></div>
+    <div class="qhead">
+      <div class="qno">${String(i+1).padStart(2,"0")}<small>/ 05</small></div>
+      ${q.multi ? '<span class="multi-badge">✓ 可複選</span>' : ''}
+    </div>
+    <p class="qtext">${q.q}</p>
+    <div class="options">
+      ${q.o.map((t,j)=>{
+        const L = "ABCD"[j];
+        return `<button class="opt" data-q="${i}" data-a="${L}">
+          <span class="opt-letter">${L}</span>
+          <span class="opt-text">${t}</span>
+        </button>`;
+      }).join("")}
+    </div>
+    ${q.multi ? `
+      <div class="btn-wrap">
+        <button class="btn" data-next="${i}" disabled>下一題 <span class="arrow">→</span></button>
+      </div>
+    ` : ''}
+  `;
+  qContainer.appendChild(sec);
+});
+
+function progressHTML(activeIdx){
+  let h = "";
+  for(let i=0;i<TOTAL;i++){
+    let cls = "";
+    if(i < activeIdx) cls = "done";
+    else if(i === activeIdx) cls = "current";
+    h += `<span class="${cls}"></span>`;
+  }
+  return h;
+}
+
+function isAnswered(qi){
+  const a = answers[qi];
+  if(Array.isArray(a)) return a.length > 0;
+  return a !== null;
+}
+
+function showPage(idx){
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  if(idx === -1) document.getElementById("page-intro").classList.add("active");
+  else if(idx < TOTAL){
+    const page = document.getElementById(`page-q${idx}`);
+    page.querySelector(".progress").innerHTML = progressHTML(idx);
+    // restore selection
+    const q = QUESTIONS[idx];
+    const cur = answers[idx];
+    page.querySelectorAll(".opt").forEach(b=>{
+      const isSel = q.multi
+        ? Array.isArray(cur) && cur.includes(b.dataset.a)
+        : b.dataset.a === cur;
+      b.classList.toggle("selected", isSel);
+    });
+    // multi-select: enable/disable next button
+    const nextBtn = page.querySelector("[data-next]");
+    if(nextBtn) nextBtn.disabled = !isAnswered(idx);
+    page.classList.add("active");
+  } else if(idx === TOTAL){
+    document.getElementById("progress-end").innerHTML = progressHTML(TOTAL);
+    document.getElementById("page-end").classList.add("active");
+  } else {
+    document.getElementById("page-thanks").classList.add("active");
+  }
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+/* ========== 開始 ========== */
+document.getElementById("btn-start").addEventListener("click", () => {
+  const v = document.getElementById("name").value.trim();
+  if(!v){
+    document.getElementById("err-name").textContent = "請先寫下你的名字 ✎";
+    return;
+  }
+  userName = v;
+  startTime = Date.now();
+  showPage(0);
+});
+document.getElementById("name").addEventListener("input", () => {
+  document.getElementById("err-name").textContent = "";
+});
+document.getElementById("name").addEventListener("keydown", e => {
+  if(e.key === "Enter") document.getElementById("btn-start").click();
+});
+
+/* ========== 點選答案 ========== */
+document.querySelectorAll(".opt").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const qi = parseInt(btn.dataset.q, 10);
+    const letter = btn.dataset.a;
+    const q = QUESTIONS[qi];
+
+    if(q.multi){
+      // 複選：toggle
+      const arr = answers[qi];
+      const idx = arr.indexOf(letter);
+      if(idx >= 0) arr.splice(idx,1);
+      else arr.push(letter);
+      btn.classList.toggle("selected");
+      // enable/disable next btn
+      const nextBtn = document.querySelector(`[data-next="${qi}"]`);
+      if(nextBtn) nextBtn.disabled = arr.length === 0;
+    } else {
+      // 單選：replace + auto advance
+      answers[qi] = letter;
+      btn.parentElement.querySelectorAll(".opt").forEach(b=>b.classList.remove("selected"));
+      btn.classList.add("selected");
+      setTimeout(() => showPage(qi+1 >= TOTAL ? TOTAL : qi+1), 380);
+    }
+  });
+});
+
+/* ========== 複選題的「下一題」按鈕 ========== */
+document.querySelectorAll("[data-next]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const qi = parseInt(btn.dataset.next, 10);
+    showPage(qi+1 >= TOTAL ? TOTAL : qi+1);
+  });
+});
+
+/* ========== 送出 ========== */
+function fmtDur(ms){
+  const s = Math.floor(ms/1000);
+  return `${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`;
+}
+
+document.getElementById("btn-submit").addEventListener("click", async () => {
+  const btn = document.getElementById("btn-submit");
+  const errEl = document.getElementById("err-submit");
+  errEl.textContent = "";
+  btn.disabled = true;
+  btn.innerHTML = '送出中… <span class="arrow">…</span>';
+
+  endTime = Date.now();
+
+  // 確保複選題排序穩定（按 ABCD 順序）
+  const cleanedAnswers = answers.map((a,i) => {
+    if(QUESTIONS[i].multi) return [...a].sort();
+    return a;
+  });
+
+  const payload = {
+    name: userName,
+    answers: cleanedAnswers,
+    attending: document.getElementById("attend").checked,
+    duration_ms: endTime - startTime,
+    started_at: new Date(startTime).toISOString(),
+    submitted_at: window.__fb.serverTimestamp(),
+    ua: navigator.userAgent.slice(0,160)
+  };
+
+  try {
+    await window.__fbReady;
+    const { db, collection, addDoc } = window.__fb;
+    await addDoc(collection(db, COLLECTION), payload);
+    document.getElementById("final-time").textContent = `用時 ${fmtDur(endTime - startTime)}`;
+    showPage(TOTAL + 1);
+  } catch (e) {
+    console.error(e);
+    errEl.textContent = "送出失敗，請檢查網路後再試一次。(" + (e.code || e.message) + ")";
+    btn.disabled = false;
+    btn.innerHTML = '送出回應 <span class="arrow">↗</span>';
+  }
+});
+</script>
+
+</body>
+</html>
