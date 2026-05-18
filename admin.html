@@ -472,14 +472,16 @@ function render(){
     let validRespondents = 0;
     responses.forEach(r => {
       const a = r.answers?.[qi];
-      if(Array.isArray(a)){
-        let any = false;
-        a.forEach(L => { if(counts[L] !== undefined){ counts[L]++; any = true; } });
-        if(any) validRespondents++;
-      } else if(counts[a] !== undefined){
-        counts[a]++;
-        validRespondents++;
-      }
+      const letters = Array.isArray(a)
+        ? a
+        : (typeof a === "string" && a.includes(","))
+          ? a.split(",")
+          : (typeof a === "string" && a)
+            ? [a]
+            : [];
+      let any = false;
+      letters.forEach(L => { if(counts[L] !== undefined){ counts[L]++; any = true; } });
+      if(any) validRespondents++;
     });
     // For multi-select: percentage = pickers / valid respondents (can sum > 100%)
     // For single-select: percentage = pickers / total picks = pickers / valid respondents
@@ -533,9 +535,12 @@ function render(){
       <td><b>${escapeHTML(r.name||"")}</b></td>
       ${[0,1,2,3,4].map(j => {
         const a = r.answers?.[j];
+        if(typeof a === "string" && a.includes(",")){
+          return `<td class="ans" style="font-size:.9rem;letter-spacing:.08em">${a.replace(/,/g," · ")}</td>`;
+        }
         if(Array.isArray(a)){
           if(a.length === 0) return `<td class="ans">—</td>`;
-          return `<td class="ans" style="font-size:.9rem;letter-spacing:.1em">${a.join("·")}</td>`;
+          return `<td class="ans" style="font-size:.9rem;letter-spacing:.08em">${a.join(" · ")}</td>`;
         }
         return `<td class="ans ${a||""}">${a || "—"}</td>`;
       }).join("")}
@@ -572,7 +577,9 @@ document.getElementById("export-csv").addEventListener("click", () => {
     r.name||"",
     ...[0,1,2,3,4].map(j => {
       const a = r.answers?.[j];
-      return Array.isArray(a) ? a.join(";") : (a || "");
+      if(Array.isArray(a)) return a.join(";");
+      if(typeof a === "string") return a.replace(/,/g, ";");
+      return "";
     }),
     r.attending ? "是" : "否",
     Math.round((r.duration_ms||0)/1000),
