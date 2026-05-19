@@ -241,6 +241,58 @@
   }
 
   .table-wrap{overflow-x:auto}
+
+  /* response cards */
+  .resp-cards{display:flex;flex-direction:column;gap:1.1rem}
+  .resp-card{
+    background:rgba(20, 35, 64, 0.4);
+    border:1px solid var(--border-faint);
+    border-radius:10px;
+    padding:1.3rem 1.5rem;
+    transition:border-color .25s,box-shadow .25s;
+  }
+  .resp-card:hover{border-color:var(--border-soft);box-shadow:0 0 18px rgba(232,182,71,.1)}
+  .resp-card-head{
+    display:flex;align-items:baseline;justify-content:space-between;
+    gap:1rem;flex-wrap:wrap;
+    padding-bottom:.85rem;margin-bottom:.95rem;
+    border-bottom:1px dashed rgba(232,182,71,.18);
+  }
+  .resp-name{
+    font-size:1.15rem;font-weight:500;
+    color:var(--star-bright);
+    letter-spacing:.05em;
+    display:flex;align-items:center;gap:.6rem;
+  }
+  .resp-idx{
+    font-family:"Cormorant Garamond",serif;font-style:italic;
+    font-weight:400;font-size:.95rem;color:var(--text-dim);
+    margin-right:.3rem;
+  }
+  .resp-attend{
+    color:var(--star-gold);font-size:1.1rem;
+    filter:drop-shadow(0 0 6px rgba(232,182,71,.5));
+  }
+  .resp-meta{
+    font-family:"JetBrains Mono",monospace;font-size:.78rem;
+    color:var(--text-dim);letter-spacing:.05em;
+    display:flex;gap:.9rem;flex-wrap:wrap;
+  }
+  .resp-qa{display:flex;flex-direction:column;gap:.55rem}
+  .resp-qa-row{
+    display:flex;gap:.7rem;align-items:flex-start;
+    font-size:.93rem;line-height:1.65;
+  }
+  .resp-qlabel{
+    flex-shrink:0;
+    font-family:"Cormorant Garamond",serif;font-style:italic;
+    color:var(--star-gold);font-size:1rem;font-weight:500;
+    min-width:1.8rem;
+  }
+  .resp-qans{flex:1;color:var(--text-cream)}
+  .resp-qans.empty{color:var(--text-dim);font-style:italic}
+  .resp-qans .multi-line{display:block;margin-bottom:.2rem}
+  .resp-qans .multi-line:last-child{margin-bottom:0}
   table{width:100%;border-collapse:collapse;font-size:.92rem}
   th,td{padding:.7rem .8rem;text-align:left;border-bottom:1px solid rgba(168,176,204,.1)}
   th{
@@ -328,18 +380,7 @@
             <button class="btn ghost" id="refresh">重新整理</button>
           </span>
         </h2>
-        <div class="table-wrap">
-          <table id="resp-table">
-            <thead>
-              <tr>
-                <th>#</th><th>姓名</th>
-                <th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th><th>Q5</th>
-                <th>5/21</th><th>用時</th><th>送出時間</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
+        <div id="resp-cards" class="resp-cards"></div>
       </section>
     </div>
   </div>
@@ -355,13 +396,13 @@
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
   const firebaseConfig = {
-apiKey: "AIzaSyBQYy2Jxjrz7MuM4UzH7hGfxWf5WEFh_7M",
-  authDomain: "worldpeace-17f48.firebaseapp.com",
-  projectId: "worldpeace-17f48",
-  storageBucket: "worldpeace-17f48.firebasestorage.app",
-  messagingSenderId: "295360234520",
-  appId: "1:295360234520:web:5578227e5af513a5a9ef6d",
-  measurementId: "G-6S61X2HZLM"
+    apiKey: "AIzaSyBQYy2Jxjrz7MuM4UzH7hGfxWf5WEFh_7M",
+    authDomain: "worldpeace-17f48.firebaseapp.com",
+    projectId: "worldpeace-17f48",
+    storageBucket: "worldpeace-17f48.firebasestorage.app",
+    messagingSenderId: "295360234520",
+    appId: "1:295360234520:web:5578227e5af513a5a9ef6d",
+    measurementId: "G-6S61X2HZLM"
   };
 
   const app = initializeApp(firebaseConfig);
@@ -375,16 +416,41 @@ const ADMIN_PASSWORD = "000000";
 const COLLECTION = "responses_w13";
 
 const QUESTIONS = [
+  { q:"你曾經「不求回報」地幫助過別人嗎？事後的感受是？", multi:false,
+    opts:["能量滿滿","一半一半","禮尚往來","務實至上"],
+    optsFull:[
+      "能量滿滿：內心感到很充實，體會到純粹付出的快樂，會另外找尋調整自己能量的方法～",
+      "一半一半：看對象與狀況，有時候會覺得自己的心力被過度消耗了，不太敢再奮不顧身。",
+      "禮尚往來：人際關係本來就是一報還一報，互相回饋才算公平。",
+      "務實至上：比較少有這種經驗，認為先顧好自己比較切合實際。"]},
+  { q:"回顧你的人生，哪一種「苦」最讓你有感？", multi:true,
+    opts:["求不得","愛別離","怨憎會","生老病死"],
+    optsFull:[
+      "求不得：理想與現實的落差（如：目標未達成、想要的得不到）",
+      "愛別離：與生命中重要的人分開（如：失戀、告別、畢業或親友離散）",
+      "怨憎會：必須面對不喜歡的人事物（如：人際摩擦、避開不了的環境壓力）",
+      "生老病死：身體或生命本質帶來的無常（如：受傷生病、寵物親人或朋友的離世）"]},
+  { q:"是否曾有一位啟發你內心、讓你由衷想學習的「精神導師」或「典範人物」？", multi:false,
+    opts:["深受啟發","滿心期待","理性存疑","獨立探索"],
+    optsFull:[
+      "深受啟發：有，這個人的思想與事蹟，對我的價值觀與生命方向影響深遠。",
+      "滿心期待：目前沒有特定的對象，但我滿渴望能找到一位值得學習的精神指標。",
+      "理性存疑：不太相信這類被推崇的人，覺得很多人只是表面包裝得很完美，私下可能會有其他面。",
+      "獨立探索：覺得不需要，我相信每個人就是自己的導師，習慣透過自我摸索與覺察來成長。"]},
   { q:"你覺得「世界和平」是有可能實現的嗎？", multi:false,
-    opts:["盡己所能：願做小任務","抱持希望：困難但嚮往","務實悲觀：遙不可及","尚未深思：還沒想過"]},
-  { q:"你相信有死後的世界嗎？", multi:false,
-    opts:["相信：生命會延續","半信半疑：寧可信其有","不相信：活在當下","尚未深思：還沒想過"]},
-  { q:"你曾「不求回報」幫助過別人嗎？事後感受？", multi:false,
-    opts:["能量滿滿：充實快樂","一半一半：看狀況","渴望回報：希望被認可","務實至上：先顧好自己"]},
-  { q:"哪一種「苦」最讓你有感？", multi:true,
-    opts:["求不得：理想與現實落差","愛別離：與重要的人分開","怨憎會：面對不喜歡的人事物","生老病死：身體無常"]},
-  { q:"曾有一位啟發你的「精神導師」嗎？", multi:false,
-    opts:["深受啟發：影響深遠","滿心期待：渴望找到","理性存疑：表面包裝","獨立探索：自己是導師"]}
+    opts:["盡己所能","抱持希望","過於理想","尚未深思"],
+    optsFull:[
+      "盡己所能：雖然深知這件事很困難，但我認為每份微小力量都有意義，依然想去做能幫助世界和平的事情。",
+      "抱持希望：我嚮往和平，但深知現實中非常困難，改變像是把石頭丟入海中起一些波瀾，無力感往往大於行動。",
+      "過於理想：我不太相信，覺得那是遙不可及的理想口號。",
+      "尚未深思：距離生活太遠，目前還沒特別想過這個問題。"]},
+  { q:"你對這學期社課的感受是？", multi:false,
+    opts:["連貫有邏輯","片段深刻","喜歡但難具體說","錯過了不少"],
+    optsFull:[
+      "我覺得整學期的社課很連貫、有邏輯，能大致回想起每堂的重點。",
+      "有些內容還沒有很理解，能大致想起一兩個覺得很深刻的地方。",
+      "整體上都蠻喜歡的，不過要具體說出學到了什麼應該有難度 XDD",
+      "這學期因為太忙錯過了不少，覺得很可惜～下學期一定要把握機會！"]}
 ];
 
 /* clock */
@@ -524,31 +590,59 @@ function render(){
     list.innerHTML = attending.map(r => `<span class="chip">${escapeHTML(r.name)}</span>`).join("");
   }
 
-  const tbody = document.querySelector("#resp-table tbody");
+  const cardWrap = document.getElementById("resp-cards");
   if(total === 0){
-    tbody.innerHTML = '<tr><td colspan="10" class="empty">尚無資料</td></tr>';
+    cardWrap.innerHTML = '<div class="empty">尚無資料</div>';
     return;
   }
-  tbody.innerHTML = responses.map((r,i) => `
-    <tr>
-      <td>${i+1}</td>
-      <td><b>${escapeHTML(r.name||"")}</b></td>
-      ${[0,1,2,3,4].map(j => {
-        const a = r.answers?.[j];
-        if(typeof a === "string" && a.includes(",")){
-          return `<td class="ans" style="font-size:.9rem;letter-spacing:.08em">${a.replace(/,/g," · ")}</td>`;
-        }
-        if(Array.isArray(a)){
-          if(a.length === 0) return `<td class="ans">—</td>`;
-          return `<td class="ans" style="font-size:.9rem;letter-spacing:.08em">${a.join(" · ")}</td>`;
-        }
-        return `<td class="ans ${a||""}">${a || "—"}</td>`;
-      }).join("")}
-      <td class="attend">${r.attending ? "✦" : "·"}</td>
-      <td class="dur">${fmtDur(r.duration_ms||0)}</td>
-      <td class="time">${fmtTime(r.submitted_at)}</td>
-    </tr>
-  `).join("");
+  cardWrap.innerHTML = responses.map((r,i) => {
+    const qa = [0,1,2,3,4].map(j => {
+      const a = r.answers?.[j];
+      const q = QUESTIONS[j];
+      // 取得選項對應的完整文字
+      const letters = Array.isArray(a)
+        ? a
+        : (typeof a === "string" && a.includes(","))
+          ? a.split(",")
+          : (typeof a === "string" && a)
+            ? [a]
+            : [];
+      if(letters.length === 0){
+        return `<div class="resp-qa-row">
+          <div class="resp-qlabel">Q${j+1}</div>
+          <div class="resp-qans empty">—</div>
+        </div>`;
+      }
+      const texts = letters.map(L => {
+        const idx = "ABCD".indexOf(L);
+        if(idx < 0 || !q.optsFull[idx]) return L;
+        return escapeHTML(q.optsFull[idx]);
+      });
+      const ansHTML = q.multi && texts.length > 1
+        ? texts.map(t => `<span class="multi-line">• ${t}</span>`).join("")
+        : texts.join("");
+      return `<div class="resp-qa-row">
+        <div class="resp-qlabel">Q${j+1}</div>
+        <div class="resp-qans">${ansHTML}</div>
+      </div>`;
+    }).join("");
+
+    return `
+    <div class="resp-card">
+      <div class="resp-card-head">
+        <div class="resp-name">
+          <span class="resp-idx">#${i+1}</span>
+          <span>${escapeHTML(r.name||"")}</span>
+          ${r.attending ? '<span class="resp-attend" title="會出席週四社課">✦</span>' : ''}
+        </div>
+        <div class="resp-meta">
+          <span>${fmtDur(r.duration_ms||0)}</span>
+          <span>${fmtTime(r.submitted_at)}</span>
+        </div>
+      </div>
+      <div class="resp-qa">${qa}</div>
+    </div>`;
+  }).join("");
 }
 
 function escapeHTML(s){
